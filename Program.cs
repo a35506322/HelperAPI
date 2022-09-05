@@ -1,3 +1,4 @@
+using InsuranceAgents.Domain.Helpers.UITC;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Npoi.Mapper;
@@ -13,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddTransient<SecurityHelper>();
 
 builder.Services.AddCors(options =>
 {
@@ -59,7 +61,7 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 });
 
-app.MapPost("/excel_for_decrypt", (HttpContext ctx) =>
+app.MapPost("/excel_for_decrypt", (HttpContext ctx, SecurityHelper securityHelper) =>
 {
     // 由於.net6 極簡API不支援FromForm標籤所以改從HttpContext讀取
     var columnInfos = JsonSerializer.Deserialize<List<SheetInfo>>(ctx.Request.Form["sheetInfos"].ToString());
@@ -93,9 +95,8 @@ app.MapPost("/excel_for_decrypt", (HttpContext ctx) =>
                  */
                 if (propertyInfo.PropertyType.Name == "String" && columnInfo.isDecrypt == "Y")
                 {
-                    // 這邊再補解密
-                    // var fileValue = propertyInfo.GetValue((object)row.Value);
-                    propertyInfo.SetValue((object)row.Value, "解密");
+                    var fileValue = propertyInfo.GetValue((object)row.Value);
+                    propertyInfo.SetValue((object)row.Value, securityHelper.DecryptData(fileValue.ToString()));
                 }
                 
             }
