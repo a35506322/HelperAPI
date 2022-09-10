@@ -1,14 +1,25 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using HelperAPI.Extensions;
+using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Swashbuckle.AspNetCore.Swagger;
 using System.Data;
-
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddGlobalConfig();
 builder.Services.AddServices();
 builder.Services.AddRepositories();
+
+// Add  FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+// Add services to the container.
+builder.Services.AddEndpointsApiExplorer();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
@@ -25,7 +36,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.Use(async (context, next) =>
 {
     // axios 無法獲得全部的header要加上這tag
@@ -35,6 +48,9 @@ app.Use(async (context, next) =>
 
 app.UseCors();
 
+// 動態新增路由
+app.Routers();
+
 app.UseHttpsRedirection();
 
 var summaries = new[]
@@ -42,8 +58,6 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-// 動態新增路由
-app.Routers();
 
 app.MapGet("/weatherforecast", () =>
 {
