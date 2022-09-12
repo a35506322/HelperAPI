@@ -3,9 +3,10 @@ using FluentValidation.AspNetCore;
 using HelperAPI.Extensions;
 using Serilog.Events;
 using Serilog;
-using Swashbuckle.AspNetCore.Swagger;
 using System.Data;
 using System.Reflection;
+using ZymLabs.NSwag.FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
 
 try
 {
@@ -23,6 +24,7 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     // Add services to the container.
+    builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddGlobalConfig();
     builder.Services.AddServices();
     builder.Services.AddRepositories();
@@ -30,10 +32,22 @@ try
     // Add  FluentValidation
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-    // Add services to the container.
-    builder.Services.AddEndpointsApiExplorer();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    builder.Services.AddSwaggerGen();
+    // Register the Swagger services
+    builder.Services.AddOpenApiDocument((settings, serviceProvider) =>
+    {
+        var fluentValidationSchemaProcessor = serviceProvider.CreateScope().ServiceProvider.GetService<FluentValidationSchemaProcessor>();
+
+        // Add the fluent validations schema processor
+        settings.SchemaProcessors.Add(fluentValidationSchemaProcessor);
+    });
+    // Add the FluentValidationSchemaProcessor as a scoped service
+    builder.Services.AddScoped<FluentValidationSchemaProcessor>(provider =>
+    {
+        var validationRules = provider.GetService<IEnumerable<FluentValidationRule>>();
+        var loggerFactory = provider.GetService<ILoggerFactory>();
+
+        return new FluentValidationSchemaProcessor(provider, validationRules, loggerFactory);
+    });
 
     builder.Services.AddCors(options =>
     {
@@ -53,8 +67,9 @@ try
 
     var app = builder.Build();
 
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // Register the Swagger generator and the Swagger UI middlewares
+    app.UseOpenApi();
+    app.UseSwaggerUi3();
 
     app.Use(async (context, next) =>
     {
