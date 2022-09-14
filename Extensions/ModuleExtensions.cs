@@ -1,8 +1,10 @@
-﻿using HelperAPI.Modules.Implements;
+﻿using HelperAPI.Helper;
+using HelperAPI.Modules.Implements;
 using HelperAPI.Modules.Interfaces;
 using HelperAPI.Services.Implements;
 using HelperAPI.Services.Interfaces;
 using InsuranceAgents.Domain.Helpers.UITC;
+using IronOcr;
 using Microsoft.AspNetCore.Hosting;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -54,6 +56,9 @@ namespace HelperAPI.Extensions
         public static void AddGlobalConfig(this IServiceCollection services)
         {
             services.AddTransient<SecurityHelper>();
+            services.AddTransient<ScanHelper>();
+            services.AddTransient<CaptchaCrackedHelper>();
+            services.AddTransient<IronTesseract>();
         }
     }
 }
