@@ -40,7 +40,7 @@ namespace HelperAPI.Extensions
         {
             // 將Service結尾且生命週期相同的物件,統一註冊
             services.Scan(scan => scan
-                    .FromAssemblyOf<IService>()     // 1.遍歷IService類別所在程序集中的所有類別
+                    .FromAssemblyOf<Program>()     // 1.遍歷IService類別所在程序集中的所有類別
                     .AddClasses(classes =>          // 2.要自動註冊的類別,條件為logic結尾的類別
                         classes.Where(t => t.Name.EndsWith("Service", StringComparison.OrdinalIgnoreCase)))
                     .AsImplementedInterfaces()      // 3.註冊的類別有實作界面
@@ -55,10 +55,10 @@ namespace HelperAPI.Extensions
 
         public static void AddGlobalConfig(this IServiceCollection services)
         {
-            services.AddTransient<SecurityHelper>();
-            services.AddTransient<ScanHelper>();
-            services.AddTransient<CaptchaCrackedHelper>();
-            services.AddTransient<IronTesseract>();
+            services.AddScoped<SecurityHelper>();
+            services.AddScoped<ScanHelper>();
+            services.AddScoped<CaptchaCrackedHelper>();
+            services.AddScoped<IronTesseract>();
         }
     }
 }

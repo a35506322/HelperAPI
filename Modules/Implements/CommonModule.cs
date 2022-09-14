@@ -1,6 +1,7 @@
 ﻿using HelperAPI.Helper;
 using HelperAPI.Models;
 using HelperAPI.Modules.Interfaces;
+using HelperAPI.Services.Interfaces;
 using InsuranceAgents.Domain.Helpers.UITC;
 using IronOcr;
 using Npoi.Mapper;
@@ -144,6 +145,76 @@ namespace HelperAPI.Modules.Implements
                     }
                 }
             });
+
+            app.MapGet("/signIn", async (ICommonService commonService) =>
+            {
+
+                int number = 1;
+                bool isSuccess = false;
+
+                while (!isSuccess)
+                {
+                    Console.WriteLine("讀取驗證碼開始");
+                    var signInRequst = await commonService.getVaildTest();
+                    signInRequst.PhoneNum = "0952190049";
+                    signInRequst.SecretCode = "s5866113";
+                    signInRequst.RememberMe = true;
+                    Console.WriteLine(JsonSerializer.Serialize(signInRequst));
+                    Console.WriteLine("登入開始");
+                    using (var httpClient = new HttpClient())
+                    {
+                        using (var request = new HttpRequestMessage(new HttpMethod("POST"), "https://test.yesgogogo.com/eMall/api/members/NewLogIn"))
+                        {
+                            request.Content = new StringContent(JsonSerializer.Serialize(signInRequst));
+                            request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                            var response = await httpClient.SendAsync(request);
+
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var result = await response.Content.ReadFromJsonAsync<ReuslteResponse>();
+                                Console.WriteLine(JsonSerializer.Serialize(result));
+
+                                if (result.rtnCode == 0)
+                                {
+                                    Console.WriteLine("登入成功");
+                                    isSuccess = true;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("登入失敗");
+                                    number++;
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("API壞了");
+                                isSuccess = true;
+                            }
+                        }
+                    }
+                }
+
+                Console.WriteLine($"總共試了{number}次");
+                return Results.Ok();
+            });
+        }
+
+        public class SignInReqeust
+        { 
+            public string PhoneNum { get; set; }
+            public string SecretCode { get; set; }
+            public string Captcha { get; set; }
+            public string ValidTransactionId { get; set; }
+            public bool RememberMe { get; set; }
+        }
+
+        public class ReuslteResponse
+        {
+            public object info { get; set; }
+            public int rtnCode { get; set; }
+            public string rtnMsg { get; set; }
+            public bool isSuccess { get; set; }
         }
     }
 }
