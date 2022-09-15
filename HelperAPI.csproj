@@ -7,9 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Enums\**" />
     <Compile Remove="Models\NewFolder\**" />
+    <Content Remove="Enums\**" />
     <Content Remove="Models\NewFolder\**" />
+    <EmbeddedResource Remove="Enums\**" />
     <EmbeddedResource Remove="Models\NewFolder\**" />
+    <None Remove="Enums\**" />
     <None Remove="Models\NewFolder\**" />
   </ItemGroup>
 
@@ -21,6 +25,7 @@
     <PackageReference Include="Scrutor" Version="4.2.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Serilog.Sinks.Map" Version="1.0.2" />
+    <PackageReference Include="Spire.OCR" Version="1.8.0" />
     <PackageReference Include="ZymLabs.NSwag.FluentValidation.AspNetCore" Version="0.6.1" />
   </ItemGroup>
 

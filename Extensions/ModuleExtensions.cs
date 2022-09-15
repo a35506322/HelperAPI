@@ -6,6 +6,7 @@ using HelperAPI.Services.Interfaces;
 using InsuranceAgents.Domain.Helpers.UITC;
 using IronOcr;
 using Microsoft.AspNetCore.Hosting;
+using Spire.OCR;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -59,6 +60,8 @@ namespace HelperAPI.Extensions
             services.AddScoped<ScanHelper>();
             services.AddScoped<CaptchaCrackedHelper>();
             services.AddScoped<IronTesseract>();
+            services.AddScoped<OcrScanner>();
+           
         }
     }
 }

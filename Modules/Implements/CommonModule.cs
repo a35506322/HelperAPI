@@ -5,9 +5,11 @@ using HelperAPI.Services.Interfaces;
 using InsuranceAgents.Domain.Helpers.UITC;
 using IronOcr;
 using Npoi.Mapper;
+using NPOI.OpenXmlFormats.Spreadsheet;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -19,6 +21,7 @@ namespace HelperAPI.Modules.Implements
     public record ExcelForDecrypt(IFormFile excelFile, List<SheetInfo> sheetInfos);
     public record SheetInfo(string name, List<ColumnInfo> data);
     public record ColumnInfo(string columnName, string isDecrypt);
+    public record OcrRequest(IFormFile ocrFile);
 
     public class CommonModule : IBaseModule
     {
@@ -197,6 +200,25 @@ namespace HelperAPI.Modules.Implements
 
                 Console.WriteLine($"總共試了{number}次");
                 return Results.Ok();
+            });
+
+            app.MapPost("/ocr", async (HttpContext httpContext, ICommonService commonService) =>
+            {
+                // 取得檔案
+                var file = httpContext.Request.Form.Files[0];
+                bool isGraphicalVerification = bool.Parse(httpContext.Request.Form["isGraphicalVerification"]);
+
+                switch (file.ContentType)
+                {
+                    case "image/gif":
+                    case "image/jpg":
+                    case "image/png":
+                        string ocrResult = await commonService.ImageOcr(file, isGraphicalVerification);
+                        return Results.Ok(ocrResult);
+                }
+
+                return Results.BadRequest("無此型別檔案實作");
+                
             });
         }
 

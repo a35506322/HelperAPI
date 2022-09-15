@@ -8,6 +8,9 @@ using System.Drawing.Imaging;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Net.Http.Headers;
+using static System.Net.Mime.MediaTypeNames;
+using Image = System.Drawing.Image;
+using Spire.OCR;
 
 namespace HelperAPI.Services.Implements
 {
@@ -15,11 +18,18 @@ namespace HelperAPI.Services.Implements
     {
         private readonly ScanHelper _scanHelper;
         private readonly IronTesseract _ironTesseract;
+        private readonly OcrScanner _ocrScanner;
+        private readonly CaptchaCrackedHelper _captchaCrackedHelper;
 
-        public CommonService(ScanHelper scanHelper, IronTesseract ironTesseract)
+        public CommonService(ScanHelper scanHelper,
+            IronTesseract ironTesseract,
+            OcrScanner ocrScanner,
+            CaptchaCrackedHelper captchaCrackedHelper)
         {
             this._scanHelper = scanHelper;
             this._ironTesseract = ironTesseract;
+            this._ocrScanner = ocrScanner;
+            this._captchaCrackedHelper = captchaCrackedHelper;
         }
         public async Task<CommonModule.SignInReqeust> getVaildTest()
         {
@@ -52,21 +62,82 @@ namespace HelperAPI.Services.Implements
 
                             Bitmap myBitmap = new Bitmap(image);
 
-                            CaptchaCrackedHelper captchaCrackedHelper = new CaptchaCrackedHelper();
                             // 降躁圖片處理
-                            captchaCrackedHelper.BmpSource = myBitmap;
-                            captchaCrackedHelper.ConvertGrayByPixels();
-                            captchaCrackedHelper.RemoteNoiseLineByPixels();
-                            captchaCrackedHelper.RemoteNoisePointByPixels();
+                            this._captchaCrackedHelper.BmpSource = myBitmap;
+                            this._captchaCrackedHelper.ConvertGrayByPixels();
+                            this._captchaCrackedHelper.RemoteNoiseLineByPixels();
+                            this._captchaCrackedHelper.RemoteNoisePointByPixels();
+
+                            // Save the  a Bit
+                            string imageName = DateTimeOffset.Now.ToUnixTimeSeconds().ToString() + "_verificationText.bmp";
+                            myBitmap.Save(imageName);
+
+                            // 讀出檔案
+                            this._ocrScanner.Scan(imageName);
+                            string scanText = this._ocrScanner.Text.ToString();
+
+                            // 刪除檔案
+                            File.Delete(imageName);
+
+                            // 使用正則表達式擷取要掃描後的文字
+                            Regex regex2 = new Regex(@"^[\w\d]{4}");
+                            MatchCollection matchStrings2 = regex2.Matches(scanText);
+                            string scanTextByRex = matchStrings2.FirstOrDefault().Value;
+                            signInReqeust.Captcha = scanTextByRex;
 
                             // 解析圖片文字
-                            var Result = await this._ironTesseract.ReadAsync(myBitmap);
-                            signInReqeust.Captcha = Result.Text;
+                            //var Result = await this._ironTesseract.ReadAsync(myBitmap);
+                            //signInReqeust.Captcha = Result.Text;
                         }
                     }
                 }
             }
             return signInReqeust;
+        }
+
+        public async Task<string> ImageOcr(IFormFile formFile, bool IsGraphicalVerification)
+        {
+            // file 轉 bitmap
+            Bitmap myBitmap;
+            using (var memoryStream = new MemoryStream())
+            {
+                await formFile.CopyToAsync(memoryStream);
+                using (var img = Image.FromStream(memoryStream))
+                {
+                    myBitmap = new Bitmap(img);
+                }
+            }
+
+            // 是否是圖形驗證碼
+            if (IsGraphicalVerification)
+            {
+                // 降躁圖片處理
+                this._captchaCrackedHelper.BmpSource = myBitmap;
+                this._captchaCrackedHelper.ConvertGrayByPixels();
+                this._captchaCrackedHelper.RemoteNoiseLineByPixels();
+                this._captchaCrackedHelper.RemoteNoisePointByPixels();
+            }
+
+            // Save the  a Bit
+            string imageName = DateTimeOffset.Now.ToUnixTimeSeconds().ToString() + "_verificationText.bmp";
+            myBitmap.Save(imageName);
+;
+            // 掃描圖片
+            this._ocrScanner.Scan(imageName);
+            string scanText = this._ocrScanner.Text.ToString();
+
+            // 刪除檔案
+            File.Delete(imageName);
+
+            // 使用正則表達式擷取要掃描後的文字
+            Regex regex2 = new Regex(@"^[\w\d]{4}");
+            MatchCollection matchStrings2 = regex2.Matches(scanText);
+            string scanTextByRex = matchStrings2.FirstOrDefault().Value;
+            return scanTextByRex;
+
+            // 解析圖片文字
+            //var Result = await this._ironTesseract.ReadAsync(myBitmap);
+            //return Result;
         }
     }
 }
