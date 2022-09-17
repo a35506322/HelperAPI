@@ -15,7 +15,7 @@ namespace HelperAPI.Modules.Implements
     {
         public void AddModuleRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/course/get", (ICourseService courseService) => courseService.GetCourse("測試CourseId"));
+            app.MapGet("/course/get", (ICourseService courseService) => courseService.GetCourse("測試CourseId")).RequireAuthorization();
             app.MapPost("/course/post",  async (IValidator <CourseRequest> validator ,CourseRequest request) => {
                 /*
                  FluentValidaion 官方目前使用minmalAPI沒有自動驗證

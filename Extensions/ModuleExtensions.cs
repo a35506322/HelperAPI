@@ -56,12 +56,13 @@ namespace HelperAPI.Extensions
 
         public static void AddGlobalConfig(this IServiceCollection services)
         {
+            services.AddSingleton<JWTHelper>();
             services.AddScoped<SecurityHelper>();
             services.AddScoped<ScanHelper>();
             services.AddScoped<CaptchaCrackedHelper>();
             services.AddScoped<IronTesseract>();
             services.AddScoped<OcrScanner>();
-           
+
         }
     }
 }
