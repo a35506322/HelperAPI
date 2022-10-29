@@ -7,13 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Enums\**" />
     <Compile Remove="Models\NewFolder\**" />
-    <Content Remove="Enums\**" />
     <Content Remove="Models\NewFolder\**" />
-    <EmbeddedResource Remove="Enums\**" />
     <EmbeddedResource Remove="Models\NewFolder\**" />
-    <None Remove="Enums\**" />
     <None Remove="Models\NewFolder\**" />
   </ItemGroup>
 

@@ -1,11 +1,16 @@
-﻿using HelperAPI.Helper;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using HelperAPI.Enums;
+using HelperAPI.Helper;
 using HelperAPI.Models;
 using HelperAPI.Modules.Interfaces;
 using HelperAPI.Services.Interfaces;
 using InsuranceAgents.Domain.Helpers.UITC;
 using IronOcr;
+using Microsoft.AspNetCore.Mvc;
 using Npoi.Mapper;
 using NPOI.OpenXmlFormats.Spreadsheet;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Net.Http.Headers;
@@ -22,6 +27,7 @@ namespace HelperAPI.Modules.Implements
     public record SheetInfo(string name, List<ColumnInfo> data);
     public record ColumnInfo(string columnName, string isDecrypt);
     public record OcrRequest(IFormFile ocrFile);
+    public record DecipherRequest(string data, DecipherCommandEnum decipherCommandEnum);
 
     public class CommonModule : IBaseModule
     {
@@ -82,7 +88,7 @@ namespace HelperAPI.Modules.Implements
                  不然中文傳去前端會亂碼
                  */
                 return Results.File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", HttpUtility.UrlEncode($"{sheetName}_解密.xlsx", Encoding.UTF8));
-            });
+            }).RequireAuthorization();
 
             app.MapGet("/parse_image", async (ScanHelper scanHelper, IronTesseract ironTesseract, CaptchaCrackedHelper captchaCrackedHelper) =>
             {
@@ -147,7 +153,7 @@ namespace HelperAPI.Modules.Implements
                         return Results.StatusCode(StatusCodes.Status500InternalServerError);
                     }
                 }
-            });
+            }).RequireAuthorization();
 
             app.MapGet("/signIn", async (ICommonService commonService) =>
             {
@@ -200,7 +206,7 @@ namespace HelperAPI.Modules.Implements
 
                 Console.WriteLine($"總共試了{number}次");
                 return Results.Ok();
-            });
+            }).RequireAuthorization();
 
             app.MapPost("/ocr", async (HttpContext httpContext, ICommonService commonService) =>
             {
@@ -219,6 +225,17 @@ namespace HelperAPI.Modules.Implements
 
                 return Results.BadRequest("無此型別檔案實作");
                 
+            }).RequireAuthorization();
+
+            app.MapPost("/decipher", async (ICommonService commonService, IValidator<DecipherRequest> validator, [FromBody]DecipherRequest decipherRequest) =>
+            {
+                ValidationResult validationResult = await validator.ValidateAsync(decipherRequest);
+                if (!validationResult.IsValid)
+                {
+                    return Results.ValidationProblem(validationResult.ToDictionary());
+                }
+                string reuslt  = await commonService.Decipher(decipherRequest);
+                return Results.Ok(reuslt);
             });
         }
 

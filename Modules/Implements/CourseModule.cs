@@ -27,7 +27,7 @@ namespace HelperAPI.Modules.Implements
                     return Results.ValidationProblem(validationResult.ToDictionary());
                 }
                 return Results.Ok("Model is valid for update!");
-            });
+            }).RequireAuthorization();
         }
     }
 }

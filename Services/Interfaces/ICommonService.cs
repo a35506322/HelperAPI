@@ -1,4 +1,5 @@
-﻿using IronOcr;
+﻿using HelperAPI.Modules.Implements;
+using IronOcr;
 using static HelperAPI.Modules.Implements.CommonModule;
 
 namespace HelperAPI.Services.Interfaces
@@ -7,5 +8,6 @@ namespace HelperAPI.Services.Interfaces
     {
         public Task<SignInReqeust> getVaildTest();
         public Task<string> ImageOcr(IFormFile formFile , bool IsGraphicalVerification);
+        public Task<string> Decipher(DecipherRequest decipherRequest);
     }
 }

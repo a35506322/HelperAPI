@@ -11,6 +11,7 @@ using System.Net.Http.Headers;
 using static System.Net.Mime.MediaTypeNames;
 using Image = System.Drawing.Image;
 using Spire.OCR;
+using GodPay_CMS.Common.Helpers.Decipher;
 
 namespace HelperAPI.Services.Implements
 {
@@ -20,17 +21,42 @@ namespace HelperAPI.Services.Implements
         private readonly IronTesseract _ironTesseract;
         private readonly OcrScanner _ocrScanner;
         private readonly CaptchaCrackedHelper _captchaCrackedHelper;
+        private readonly DecipherHelper _decipherHelper;
 
         public CommonService(ScanHelper scanHelper,
             IronTesseract ironTesseract,
             OcrScanner ocrScanner,
-            CaptchaCrackedHelper captchaCrackedHelper)
+            CaptchaCrackedHelper captchaCrackedHelper,
+            DecipherHelper decipherHelper)
         {
             this._scanHelper = scanHelper;
             this._ironTesseract = ironTesseract;
             this._ocrScanner = ocrScanner;
             this._captchaCrackedHelper = captchaCrackedHelper;
+            this._decipherHelper = decipherHelper;
         }
+
+        public async Task<string> Decipher(DecipherRequest decipherRequest)
+        {
+            switch (decipherRequest.decipherCommandEnum)
+            { 
+                case Enums.DecipherCommandEnum.DataEncryptorAES:
+                    return  this._decipherHelper.DataEncryptorAES(decipherRequest.data);
+
+                case Enums.DecipherCommandEnum.DataDecryptorAES:
+                    return this._decipherHelper.DataDecryptorAES(decipherRequest.data);
+
+                case Enums.DecipherCommandEnum.ConnEncryptorAES:
+                    return this._decipherHelper.ConnEncryptorAES(decipherRequest.data);
+
+                case Enums.DecipherCommandEnum.ConnDecryptorAES:
+
+                    return this._decipherHelper.ConnDecryptorAES(decipherRequest.data);
+                default:
+                    throw new ArgumentException("無此操作");
+            }
+        }
+
         public async Task<CommonModule.SignInReqeust> getVaildTest()
         {
             SignInReqeust signInReqeust = new SignInReqeust();

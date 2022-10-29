@@ -7,7 +7,7 @@ namespace HelperAPI.Modules.Implements
     {
         public void AddModuleRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/book/get", (ICourseService courseService) => courseService.GetCourse("測試BookId"));
+            app.MapGet("/book/get", (ICourseService courseService) => courseService.GetCourse("測試BookId")).RequireAuthorization();
         }
     }
 }

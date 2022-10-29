@@ -1,4 +1,5 @@
-﻿using HelperAPI.Helper;
+﻿using GodPay_CMS.Common.Helpers.Decipher;
+using HelperAPI.Helper;
 using HelperAPI.Modules.Implements;
 using HelperAPI.Modules.Interfaces;
 using HelperAPI.Services.Implements;
@@ -62,7 +63,7 @@ namespace HelperAPI.Extensions
             services.AddScoped<CaptchaCrackedHelper>();
             services.AddScoped<IronTesseract>();
             services.AddScoped<OcrScanner>();
-
+            services.AddScoped<DecipherHelper>();
         }
     }
 }
